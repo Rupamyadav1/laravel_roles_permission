@@ -5,58 +5,96 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Permission;
+
+
 use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
-    public function index(){
-         $roles = Role::orderBy('created_at','DESC')->paginate(10);
-        
-       $data['roles']=$roles;
+    public function index()
+    {
+        $roles = Role::orderBy('created_at', 'DESC')->paginate(10);
 
-       return view( 'roles.index',$data);
+        $data['roles'] = $roles;
 
+        return view('roles.index', $data);
     }
-    public function create(){
-       $permissions = Permission::orderBy('created_at','DESC')->get();
-        $data['permissions'] =$permissions;
-        return view('roles.create',$data);
-
+    public function create()
+    {
+        $permissions = Permission::orderBy('created_at', 'DESC')->get();
+        $data['permissions'] = $permissions;
+        return view('roles.create', $data);
     }
-    public function store(Request $request){
-       // dd($request->permission);
-      $validator =  Validator::make($request->all(),[
-            'name'=>'required|unique:roles|min:3',
+    public function store(Request $request)
+    {
+        // dd($request->permission);
+        $validator =  Validator::make($request->all(), [
+            'name' => 'required|unique:roles|min:3',
+        ]);
+        if ($validator->passes()) {
+
+            $role = Role::create([
+                'name' => $request->name,
+            ]);
+            if (!empty($request->permission)) {
+                foreach ($request->permission as $name) {
+                    $role->givePermissionTo($name);
+                }
+            }
+
+
+            return redirect()->route('roles.index')->with('success', 'role added successfully');
+        } else {
+            return redirect()->route('roles.create')->withInput()->withErrors($validator);
+        }
+    }
+    public function edit($id)
+    {
+        $role = Role::find($id);
+        $hasPermissions=$role->permissions->pluck('name');
+                $permissions = Permission::orderBy('created_at', 'DESC')->get();
+
+        $data['hasPermissions']=$hasPermissions;
+        $data['permissions']=$permissions;
+        $data['role'] = $role;
+        return view('roles.edit', $data);
+    }
+    public function update($id,Request $request) {
+         $role = Role::findOrFail($id);
+         $validator =  Validator::make($request->all(),[
+            'name'=>'required|unique:roles,name,'.$id.',id'
         ]);
         if($validator->passes()){
-           
-           $role = Role::create([
-                'name'=>$request->name,
-            ]);
+            $role->name=$request->name;
+            $role->save();
             if(!empty($request->permission)){
-                foreach($request->permission as $name){
-                $role->givePermissionTo($name);
+                $role->syncPermissions($request->permission);
 
             }
-
+            else{
+                $role->syncPermissions([]);
             }
-            
-            
-            return redirect()->route('roles.index')->with('success','role added successfully');
+            return redirect()->route('roles.index')->with('success','Role updated successfully');
            
         }else{
-        return redirect()->route('roles.create')->withInput()->withErrors($validator);
+        return redirect()->route('roles.edit',$id)->withInput()->withErrors($validator);
 
         }
-
     }
-    public function edit(){
+    public function destroy(Request $request)
+    {
+        $role = Role::find($request->id);
 
-    }
-    public function update(){
-
-    }
-    public function destroy(){
-
+        if ($role == null) {
+            session()->flash('error', 'Role Not Found');
+            return response()->json([
+                'status' => false,
+            ]);
+        }
+        $role->delete();
+        session()->flash('success', 'Role deleted successfully');
+        return response()->json([
+            'status' => true,
+        ]);
     }
 }
