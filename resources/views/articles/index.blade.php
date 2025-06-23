@@ -2,10 +2,11 @@
     <x-slot name="header">
         <div class="flex justify-between">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Roles') }}
+                {{ __('Articles') }}
             </h2>
-            @can('create roles')
-                <a href="{{ route('roles.create') }}" class="bg-slate-700 text-sm rounded-md text-white px-3 py-3">Create</a>
+            @can('create articles')
+                <a href="{{ route('articles.create') }}"
+                    class="bg-slate-700 text-sm rounded-md text-white px-3 py-3">Create</a>
             @endcan
         </div>
     </x-slot>
@@ -18,30 +19,30 @@
                     <tr class="border-b">
                         <th class="px-6 py-3 text-left">#</th>
                         <th class="px-6 py-3 text-left">Name</th>
-                        <th class="px-6 py-3 text-left">Permisions</th>
-
+                        <th class="px-6 py-3 text-left">Author</th>
                         <th class="px-6 py-3 text-left">Created</th>
                         <th class="px-6 py-3 text-center">Action</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white">
-                    @if ($roles->isNotEmpty())
-                        @foreach ($roles as $role)
+                    @if ($articles->isNotEmpty())
+                        @foreach ($articles as $article)
                             <tr class="border-b">
-                                <td class="px-6 py-3 text-left">{{ $role->id }}</td>
-                                <td class="px-6 py-3 text-left">{{ $role->name }}</td>
-                                <td>{{ $role->permissions->pluck('name')->implode(',') }}</td>
+                                <td class="px-6 py-3 text-left">{{ $article->id }}</td>
+                                <td class="px-6 py-3 text-left">{{ $article->title }}</td>
+                                <td class="px-6 py-3 text-left">{{ $article->author }}</td>
                                 <td class="px-6 py-3 text-left">
-                                    {{ \Carbon\Carbon::parse($role->created_at)->format('d M, Y') }}</td>
-                                <td class="px-9 py-3 text-center">
-                                    @can('edit roles')
-                                        <a href="{{ route('roles.edit', $role->id) }}"
+                                    {{ \Carbon\Carbon::parse($article->created_at)->format('d M, Y') }}</td>
+                                <td class="px-6 py-3 text-center">
+                                    @can('edit articles')
+                                        <a href="{{ route('article.edit', $article->id) }}"
                                             class="bg-slate-700 text-sm rounded-md text-white px-3 py-2 hover:bg-slate-600">
                                             Edit
                                         </a>
                                     @endcan
-                                    @can('delete roles')
-                                        <a href="#" onclick="deleteRole({{ $role->id }})"
+
+                                    @can('delete articles')
+                                        <a href="#" onclick="deleteArticle({{ $article->id }})"
                                             class="ml-2 bg-red-700 text-sm rounded-md text-white px-3 py-2 hover:bg-red-500">
                                             Delete
                                         </a>
@@ -55,7 +56,7 @@
                 </tbody>
             </table>
             <div class="bg-white my-3">
-                {{ $roles->links() }}
+                {{ $articles->links() }}
             </div>
 
 
@@ -63,10 +64,10 @@
     </div>
     <x-slot name="script">
         <script type="text/javascript">
-            function deleteRole(id) {
-                if (confirm('Are you sure you want to delete this role?')) {
+            function deleteArticle(id) {
+                if (confirm('Are you sure you want to delete this article?')) {
                     $.ajax({
-                        url: "{{ route('role.destroy') }}",
+                        url: "{{ route('article.destroy') }}",
                         type: 'delete',
                         data: {
                             id: id
@@ -76,7 +77,7 @@
                             'x-csrf-token': '{{ csrf_token() }}'
                         },
                         success: function(response) {
-                            window.location.href = "{{ route('roles.index') }}"
+                            window.location.href = "{{ route('articles.index') }}"
                         }
                     })
                 }

@@ -3,15 +3,31 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Permission;
 
-
+use Illuminate\Routing\Controllers\Middleware;
 use Spatie\Permission\Models\Role;
 
-class RoleController extends Controller
+class RoleController extends Controller implements HasMiddleware
 {
+
+    public static function middleware():array
+     {
+        return [
+            new Middleware('permission:create roles',only:['create']),
+            new Middleware('permission:view roles',only:['index']),
+            new Middleware('permission:edit roles',only:['edit']),
+            new Middleware('permission:delete roles',only:['destroy']),
+
+
+        ];
+
+     }
     public function index()
+   
+   
     {
         $roles = Role::orderBy('created_at', 'DESC')->paginate(10);
 
